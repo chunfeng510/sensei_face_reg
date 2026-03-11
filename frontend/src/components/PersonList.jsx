@@ -9,6 +9,7 @@ import { Delete, Person } from '@mui/icons-material';
 import { apiService } from '../services/api';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:9453/api';
+// Docker 環境下 REACT_APP_API_URL=/api，透過 nginx 反向代理
 
 function PersonList() {
   const [persons, setPersons] = useState([]);
