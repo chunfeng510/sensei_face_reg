@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, List, ListItem, ListItemText, ListItemButton,
-  CircularProgress, Alert, Chip, IconButton, Dialog, DialogTitle,
-  DialogContent, DialogActions, Button
+  CircularProgress, Alert, IconButton, Dialog, DialogTitle,
+  DialogContent, DialogActions, Button, ImageList, ImageListItem,
+  Tooltip
 } from '@mui/material';
 import { Delete, Person } from '@mui/icons-material';
 import { apiService } from '../services/api';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:9453/api';
 
 function PersonList() {
   const [persons, setPersons] = useState([]);
@@ -158,19 +161,60 @@ function PersonList() {
               {selectedPerson.person.name}
               {selectedPerson.person.name_jp && ` (${selectedPerson.person.name_jp})`}
             </DialogTitle>
-            <DialogContent sx={{ pt: { xs: 2, sm: 3 } }}>
-              <Typography 
-                variant="body2" 
-                color="text.secondary" 
+            <DialogContent sx={{ pt: { xs: 1, sm: 2 } }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
                 gutterBottom
                 sx={{ fontSize: { xs: '0.875rem', sm: '0.875rem' } }}
               >
                 人臉數量：{selectedPerson.faces.length} 張
               </Typography>
+
+              {selectedPerson.faces.length > 0 ? (
+                <ImageList
+                  cols={Math.min(selectedPerson.faces.length, 3)}
+                  gap={8}
+                  sx={{ mt: 1, mb: 0 }}
+                >
+                  {selectedPerson.faces.map((face) => (
+                    <ImageListItem key={face.id}>
+                      <Tooltip title={`人臉 #${face.id}`} placement="top">
+                        <Box
+                          sx={{
+                            position: 'relative',
+                            paddingTop: '100%',
+                            overflow: 'hidden',
+                            borderRadius: 2,
+                            bgcolor: '#f5f5f5',
+                            cursor: 'default'
+                          }}
+                        >
+                          <img
+                            src={`${API_BASE_URL}/faces/${face.id}/image`}
+                            alt={selectedPerson.person.name}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                            }}
+                          />
+                        </Box>
+                      </Tooltip>
+                    </ImageListItem>
+                  ))}
+                </ImageList>
+              ) : (
+                <Alert severity="info" sx={{ mt: 1 }}>尚無人臉照片</Alert>
+              )}
+
               {selectedPerson.person.notes && (
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
+                <Typography
+                  variant="body2"
+                  sx={{
                     mt: 2,
                     fontSize: { xs: '0.875rem', sm: '0.875rem' }
                   }}
@@ -180,7 +224,7 @@ function PersonList() {
               )}
             </DialogContent>
             <DialogActions sx={{ p: { xs: 2, sm: 3 } }}>
-              <Button 
+              <Button
                 onClick={() => setDetailDialog(false)}
                 variant="contained"
                 fullWidth={window.innerWidth < 600}

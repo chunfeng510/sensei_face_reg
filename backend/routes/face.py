@@ -1,8 +1,11 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_file
 from extensions import db
 from models import Person, Face, Photo
 from services import FaceRecognitionService
+from PIL import Image
 import json
+import io
+import os
 
 face_bp = Blueprint('face', __name__)
 face_recognizer = FaceRecognitionService()
@@ -156,6 +159,43 @@ def delete_person(person_id):
         }), 200
     except Exception as e:
         db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@face_bp.route('/faces/<int:face_id>/image', methods=['GET'])
+def get_face_image(face_id):
+    """取得裁切後的人臉圖片"""
+    face = Face.query.get(face_id)
+    if not face:
+        return jsonify({'success': False, 'error': '找不到人臉資料'}), 404
+
+    photo = face.photo
+    if not photo or not os.path.exists(photo.filepath):
+        return jsonify({'success': False, 'error': '找不到照片檔案'}), 404
+
+    try:
+        # face_location 格式：'top,right,bottom,left'
+        top, right, bottom, left = [int(x) for x in face.face_location.split(',')]
+
+        img = Image.open(photo.filepath).convert('RGB')
+        img_w, img_h = img.size
+
+        # 加邊距讓臉部不會太緊
+        padding = max(30, int((bottom - top) * 0.4))
+        crop_top    = max(0, top - padding)
+        crop_left   = max(0, left - padding)
+        crop_bottom = min(img_h, bottom + padding)
+        crop_right  = min(img_w, right + padding)
+
+        cropped = img.crop((crop_left, crop_top, crop_right, crop_bottom))
+        cropped.thumbnail((300, 300))
+
+        img_io = io.BytesIO()
+        cropped.save(img_io, 'JPEG', quality=85)
+        img_io.seek(0)
+
+        return send_file(img_io, mimetype='image/jpeg')
+
+    except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @face_bp.route('/faces', methods=['GET'])

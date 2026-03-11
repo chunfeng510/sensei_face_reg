@@ -8,32 +8,43 @@ review_bp = Blueprint('review', __name__)
 
 @review_bp.route('/review/random', methods=['GET'])
 def get_random_face():
-    """取得隨機人臉進行複習"""
+    """取得隨機人臉進行複習（含選擇題選項）"""
     try:
-        # 可選參數：指定person_id
         person_id = request.args.get('person_id', type=int)
-        
+
         query = Face.query
         if person_id:
             query = query.filter_by(person_id=person_id)
-        
-        # 取得所有符合條件的人臉
+
         faces = query.all()
-        
+
         if not faces:
             return jsonify({
                 'success': False,
                 'message': '沒有可複習的人臉'
             }), 404
-        
-        # 隨機選擇一個
+
         face = random.choice(faces)
-        
+        correct_person = face.person
+
+        # 取得其他人物作為干擾選項（最多 3 個）
+        other_persons = Person.query.filter(Person.id != correct_person.id).all()
+        num_distractors = min(3, len(other_persons))
+        distractors = random.sample(other_persons, num_distractors) if other_persons else []
+
+        # 組合並洗牌
+        choices = [{'id': correct_person.id, 'name': correct_person.name, 'name_jp': correct_person.name_jp}]
+        for p in distractors:
+            choices.append({'id': p.id, 'name': p.name, 'name_jp': p.name_jp})
+        random.shuffle(choices)
+
         return jsonify({
             'success': True,
-            'face': face.to_dict(include_person=False)  # 不包含答案
+            'face': face.to_dict(include_person=False),
+            'choices': choices,
+            'correct_person_id': correct_person.id
         }), 200
-    
+
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
