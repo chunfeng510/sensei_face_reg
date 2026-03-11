@@ -1,0 +1,65 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* 防止行動裝置上的文字縮放 */
+  -webkit-text-size-adjust: 100%;
+  /* 防止橫向滾動 */
+  overflow-x: hidden;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* 行動裝置優化 */
+@media (max-width: 600px) {
+  /* 防止 iOS Safari 的輸入框放大 */
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  textarea {
+    font-size: 16px !important;
+  }
+  
+  /* 優化觸控目標大小 */
+  button {
+    min-height: 44px;
+  }
+  
+  /* 防止雙擊縮放 */
+  * {
+    touch-action: manipulation;
+  }
+}
+
+/* 圖片響應式 */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 優化滾動效能 */
+#root {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 隱藏水平滾動條 */
+html, body {
+  overflow-x: hidden;
+}
+
+/* 行動裝置安全區域支援（iPhone X 等） */
+@supports (padding: env(safe-area-inset-bottom)) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
